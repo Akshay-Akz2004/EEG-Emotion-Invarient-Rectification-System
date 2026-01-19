@@ -1,0 +1,2 @@
+best_val_accuracy,test_accuracy,test_emotion_accuracy,emotion_variance,emotion_mean,max_emotion_diff,train_val_gap,model_parameters,train_samples,val_samples,test_samples,final_epoch,per_emotion_accs,per_emotion_samples
+90.56737588652483,90.42296672434824,31.392017247737652,1.304285000794041,90.42355593807963,3.5354465457971274,-5.727954370284605,143828,164499,35250,35251,39,"[0.91873869801085, 0.9101660222879235, 0.9046532846715328, 0.8833842325528787]","[np.int64(8848), np.int64(8794), np.int64(8768), np.int64(8841)]"

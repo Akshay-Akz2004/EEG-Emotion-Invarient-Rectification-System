@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEG Biometric Authentication</title>
+    <!-- Tailwind CSS CDN (working version) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles to complement Tailwind */
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+        .file-upload-area {
+            transition: all 0.3s ease;
+        }
+        .file-upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid #10b981;
+        }
+        .error-box {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+    <script>
+        // Configure Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#8b5cf6',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-4 sm:px-6 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <div class="text-center sm:text-left mb-4 sm:mb-0">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+                        <i class="fas fa-brain mr-2 text-blue-600"></i>
+                        EEG Biometric Authentication
+                    </h1>
+                    <p class="text-gray-600 text-sm sm:text-base">Emotion-Invariant Rectification System</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-gray-500">System Status</div>
+                    <div class="flex items-center justify-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2 pulse-animation"></div>
+                        <span class="font-semibold text-green-600">Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-6 sm:py-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                            <i class="fas fa-users text-blue-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-gray-900" id="userCount">0</div>
+                            <div class="text-xs text-gray-500">Users</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-green-100 rounded-lg mr-3">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-gray-900">90.42%</div>
+                            <div class="text-xs text-gray-500">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-purple-100 rounded-lg mr-3">
+                            <i class="fas fa-brain text-purple-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-gray-900">0.52%</div>
+                            <div class="text-xs text-gray-500">Variance</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-red-100 rounded-lg mr-3">
+                            <i class="fas fa-shield-alt text-red-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-gray-900">70%</div>
+                            <div class="text-xs text-gray-500">Threshold</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+                <!-- Tabs -->
+                <div class="border-b">
+                    <div class="flex overflow-x-auto">
+                        <button id="registerTab" class="tab-button flex-shrink-0 px-4 py-3 text-center font-semibold text-sm sm:text-base active bg-blue-50 text-blue-700 border-b-2 border-blue-600">
+                            <i class="fas fa-user-plus mr-2"></i>Registration
+                        </button>
+                        <button id="authTab" class="tab-button flex-shrink-0 px-4 py-3 text-center font-semibold text-sm sm:text-base text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-fingerprint mr-2"></i>Authentication
+                        </button>
+                        <button id="usersTab" class="tab-button flex-shrink-0 px-4 py-3 text-center font-semibold text-sm sm:text-base text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-list mr-2"></i>Users
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Registration Tab -->
+                <div id="registerContent" class="p-4 sm:p-6">
+                    <div class="mb-6">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">User Registration</h2>
+                        <p class="text-gray-600 text-sm sm:text-base">Upload 2 EEG files to create your biometric profile</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- User Info -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">User Information</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">User ID *</label>
+                                    <input type="text" id="regUserId" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., user001">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Username *</label>
+                                    <input type="text" id="regUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your name">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <input type="email" id="regEmail" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="email@example.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">EEG Files Upload</h3>
+                            <div class="space-y-4">
+                                <!-- File 1 -->
+                                <div class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors" id="file1Area">
+                                    <input type="file" id="regFile1" class="hidden" accept=".npz">
+                                    <label for="regFile1" class="cursor-pointer block">
+                                        <div class="text-3xl mb-3 text-blue-500">
+                                            <i class="fas fa-brain"></i>
+                                        </div>
+                                        <div class="font-semibold text-gray-900 mb-2 text-sm" id="file1Text">
+                                            Upload EEG File 1
+                                        </div>
+                                        <p class="text-gray-500 text-xs mb-3">
+                                            Click to select .npz file
+                                        </p>
+                                        <div class="text-xs text-gray-400">
+                                            Required for registration
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <!-- File 2 -->
+                                <div class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors" id="file2Area">
+                                    <input type="file" id="regFile2" class="hidden" accept=".npz">
+                                    <label for="regFile2" class="cursor-pointer block">
+                                        <div class="text-3xl mb-3 text-blue-500">
+                                            <i class="fas fa-wave-square"></i>
+                                        </div>
+                                        <div class="font-semibold text-gray-900 mb-2 text-sm" id="file2Text">
+                                            Upload EEG File 2
+                                        </div>
+                                        <p class="text-gray-500 text-xs mb-3">
+                                            Click to select .npz file
+                                        </p>
+                                        <div class="text-xs text-gray-400">
+                                            Required for registration
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="registerUser()" id="registerBtn" class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow hover:shadow-md text-sm sm:text-base">
+                        <i class="fas fa-user-plus mr-2"></i>Complete Registration
+                    </button>
+
+                    <div id="registerResult" class="mt-4"></div>
+                </div>
+
+                <!-- Authentication Tab -->
+                <div id="authContent" class="p-4 sm:p-6 hidden">
+                    <div class="mb-6">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">User Authentication</h2>
+                        <p class="text-gray-600 text-sm sm:text-base">Upload 1 EEG file to verify your identity</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- User Info -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Authentication Details</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">User ID *</label>
+                                    <input type="text" id="authUserId" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your User ID">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Similarity Threshold: <span id="thresholdValue" class="text-blue-600 font-bold">70%</span></label>
+                                    <input type="range" id="thresholdSlider" min="50" max="95" value="70" class="w-full">
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        Minimum similarity required for authentication
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">EEG File Upload</h3>
+                            <div class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors" id="authFileArea">
+                                <input type="file" id="authFile" class="hidden" accept=".npz">
+                                <label for="authFile" class="cursor-pointer block">
+                                    <div class="text-4xl mb-4 text-green-500">
+                                        <i class="fas fa-fingerprint"></i>
+                                    </div>
+                                    <div class="font-semibold text-gray-900 mb-2 text-sm sm:text-base" id="authFileText">
+                                        Upload EEG File
+                                    </div>
+                                    <p class="text-gray-500 text-xs sm:text-sm mb-4">
+                                        Click to select .npz file containing EEG data
+                                    </p>
+                                    <button class="px-4 py-2 bg-green-100 text-green-600 rounded-lg font-medium hover:bg-green-200 transition-colors text-sm">
+                                        Select EEG File
+                                    </button>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="authenticateUser()" id="authBtn" class="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow hover:shadow-md text-sm sm:text-base">
+                        <i class="fas fa-fingerprint mr-2"></i>Authenticate User
+                    </button>
+
+                    <div id="authResult" class="mt-4"></div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="usersContent" class="p-4 sm:p-6 hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Registered Users</h2>
+                            <p class="text-gray-600 text-sm sm:text-base">List of all users in the system</p>
+                        </div>
+                        <div>
+                            <button onclick="loadUsers()" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg font-medium hover:bg-blue-200 text-sm">
+                                <i class="fas fa-sync-alt mr-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="usersList" class="space-y-4">
+                        <!-- Users will be loaded here -->
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-users text-3xl mb-3 text-gray-300"></i>
+                            <p>No users registered yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-4">How the System Works</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="text-center p-3">
+                        <div class="text-2xl text-blue-600 mb-2">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm">1. Upload</h4>
+                        <p class="text-gray-600 text-xs">Upload 2 EEG files</p>
+                    </div>
+                    <div class="text-center p-3">
+                        <div class="text-2xl text-purple-600 mb-2">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm">2. Process</h4>
+                        <p class="text-gray-600 text-xs">Extract features</p>
+                    </div>
+                    <div class="text-center p-3">
+                        <div class="text-2xl text-green-600 mb-2">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm">3. Store</h4>
+                        <p class="text-gray-600 text-xs">Create signature</p>
+                    </div>
+                    <div class="text-center p-3">
+                        <div class="text-2xl text-red-600 mb-2">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm">4. Verify</h4>
+                        <p class="text-gray-600 text-xs">Compare & authenticate</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 py-4 bg-white border-t">
+        <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
+            <p>EEG Biometric Authentication System • Emotion-Invariant Rectification Network</p>
+            <p class="mt-1 text-xs">Model Accuracy: 90.42% • Authentication Threshold: 70%</p>
+        </div>
+    </footer>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:5001';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserCount();
+            setupFileUploads();
+            setupThresholdSlider();
+            loadUsers();
+        });
+
+        // Tab switching
+        document.getElementById('registerTab').addEventListener('click', () => switchTab('register'));
+        document.getElementById('authTab').addEventListener('click', () => switchTab('auth'));
+        document.getElementById('usersTab').addEventListener('click', () => switchTab('users'));
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-50', 'text-blue-700', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-gray-600');
+            });
+            
+            // Hide all contents
+            document.querySelectorAll('[id$="Content"]').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Show selected tab
+            if (tab === 'register') {
+                document.getElementById('registerTab').classList.add('active', 'bg-blue-50', 'text-blue-700', 'border-b-2', 'border-blue-600');
+                document.getElementById('registerContent').classList.remove('hidden');
+            } else if (tab === 'auth') {
+                document.getElementById('authTab').classList.add('active', 'bg-blue-50', 'text-blue-700', 'border-b-2', 'border-blue-600');
+                document.getElementById('authContent').classList.remove('hidden');
+            } else if (tab === 'users') {
+                document.getElementById('usersTab').classList.add('active', 'bg-blue-50', 'text-blue-700', 'border-b-2', 'border-blue-600');
+                document.getElementById('usersContent').classList.remove('hidden');
+                loadUsers();
+            }
+        }
+
+        // File upload setup
+        function setupFileUploads() {
+            // Registration files
+            const file1Input = document.getElementById('regFile1');
+            const file2Input = document.getElementById('regFile2');
+            
+            file1Input.addEventListener('change', function(e) {
+                if (this.files[0]) {
+                    document.getElementById('file1Text').textContent = this.files[0].name;
+                    document.getElementById('file1Area').classList.add('border-green-400', 'bg-green-50');
+                }
+            });
+            
+            file2Input.addEventListener('change', function(e) {
+                if (this.files[0]) {
+                    document.getElementById('file2Text').textContent = this.files[0].name;
+                    document.getElementById('file2Area').classList.add('border-green-400', 'bg-green-50');
+                }
+            });
+            
+            // Authentication file
+            const authFileInput = document.getElementById('authFile');
+            authFileInput.addEventListener('change', function(e) {
+                if (this.files[0]) {
+                    document.getElementById('authFileText').textContent = this.files[0].name;
+                    document.getElementById('authFileArea').classList.add('border-green-400', 'bg-green-50');
+                }
+            });
+            
+            // Drag and drop
+            setupDragAndDrop();
+        }
+
+        // Drag and drop functionality
+        function setupDragAndDrop() {
+            const dropAreas = document.querySelectorAll('.file-upload-area');
+            
+            dropAreas.forEach(area => {
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+                
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+                
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const input = area.querySelector('input[type="file"]');
+                        if (input) {
+                            input.files = files;
+                            input.dispatchEvent(new Event('change'));
+                        }
+                    }
+                });
+            });
+        }
+
+        // Threshold slider
+        function setupThresholdSlider() {
+            const slider = document.getElementById('thresholdSlider');
+            const value = document.getElementById('thresholdValue');
+            
+            slider.addEventListener('input', function() {
+                value.textContent = this.value + '%';
+            });
+        }
+
+        // Load user count
+        async function loadUserCount() {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                const data = await response.json();
+                document.getElementById('userCount').textContent = data.count || 0;
+            } catch (error) {
+                console.error('Error loading user count:', error);
+            }
+        }
+
+        // Register user
+        async function registerUser() {
+            const userId = document.getElementById('regUserId').value;
+            const username = document.getElementById('regUsername').value;
+            const file1 = document.getElementById('regFile1').files[0];
+            const file2 = document.getElementById('regFile2').files[0];
+            
+            if (!userId || !username) {
+                showMessage('registerResult', 'Please fill in all required fields', 'error');
+                return;
+            }
+            
+            if (!file1 || !file2) {
+                showMessage('registerResult', 'Please upload both EEG files', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('username', username);
+            formData.append('email', document.getElementById('regEmail').value);
+            formData.append('eeg_file1', file1);
+            formData.append('eeg_file2', file2);
+            
+            const btn = document.getElementById('registerBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Registering...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="success-box rounded-lg p-4 mb-4">
+                            <div class="flex items-center mb-3">
+                                <div class="p-2 bg-green-100 rounded-lg mr-3">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900">Registration Successful!</h3>
+                                    <p class="text-gray-600 text-sm">${data.message}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded p-3 mb-3">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Registration Details:</h4>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <div class="text-gray-500">User ID</div>
+                                        <div class="font-bold">${data.user_id}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-gray-500">Username</div>
+                                        <div class="font-bold">${data.username}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-gray-500">File Similarity</div>
+                                        <div class="font-bold ${data.similarity_between_files >= 70 ? 'text-green-600' : 'text-yellow-600'}">${data.similarity_between_files}%</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-gray-500">Status</div>
+                                        <div class="font-bold text-green-600">Enrolled</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4 class="font-semibold text-gray-900 mb-2 text-sm">File Analysis:</h4>
+                    `;
+                    
+                    data.file_results.forEach((result, index) => {
+                        html += `
+                            <div class="bg-gray-50 rounded p-3 mb-2">
+                                <div class="font-semibold text-gray-900 mb-1">EEG File ${result.file}</div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-gray-500">Subject:</span>
+                                        <span class="font-bold ml-1">${result.subject_id}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Emotion:</span>
+                                        <span class="font-bold ml-1">${result.emotion}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Subj Conf:</span>
+                                        <span class="font-bold text-blue-600 ml-1">${result.subject_confidence}%</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Emo Conf:</span>
+                                        <span class="font-bold text-purple-600 ml-1">${result.emotion_confidence}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            <div class="text-xs text-gray-500 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                User profile has been stored in the database.
+                            </div>
+                        </div>
+                    `;
+                    
+                    showMessage('registerResult', html, 'success');
+                    
+                    // Clear form
+                    document.getElementById('regUserId').value = '';
+                    document.getElementById('regUsername').value = '';
+                    document.getElementById('regEmail').value = '';
+                    document.getElementById('regFile1').value = '';
+                    document.getElementById('regFile2').value = '';
+                    document.getElementById('file1Text').textContent = 'Upload EEG File 1';
+                    document.getElementById('file2Text').textContent = 'Upload EEG File 2';
+                    document.getElementById('file1Area').classList.remove('border-green-400', 'bg-green-50');
+                    document.getElementById('file2Area').classList.remove('border-green-400', 'bg-green-50');
+                    
+                    // Update user count
+                    loadUserCount();
+                    loadUsers();
+                    
+                } else {
+                    showMessage('registerResult', `<div class="error-box rounded-lg p-4"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${data.error}</div>`, 'error');
+                }
+            } catch (error) {
+                showMessage('registerResult', `<div class="error-box rounded-lg p-4"><i class="fas fa-exclamation-triangle mr-2"></i>Connection error: ${error.message}</div>`, 'error');
+            }
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+
+        // Authenticate user
+        async function authenticateUser() {
+            const userId = document.getElementById('authUserId').value;
+            const file = document.getElementById('authFile').files[0];
+            const threshold = document.getElementById('thresholdSlider').value / 100;
+            
+            if (!userId) {
+                showMessage('authResult', '<div class="error-box rounded-lg p-4">Please enter User ID</div>', 'error');
+                return;
+            }
+            
+            if (!file) {
+                showMessage('authResult', '<div class="error-box rounded-lg p-4">Please upload an EEG file</div>', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('eeg_file', file);
+            formData.append('threshold', threshold);
+            
+            const btn = document.getElementById('authBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/authenticate`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.authenticated !== undefined) {
+                    const isAuthentic = data.authenticated;
+                    const similarity = data.similarity_score;
+                    
+                    let html = `
+                        <div class="${isAuthentic ? 'success-box' : 'error-box'} rounded-lg p-4">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 ${isAuthentic ? 'bg-green-100' : 'bg-red-100'} rounded-lg mr-4">
+                                    <i class="fas ${isAuthentic ? 'fa-check' : 'fa-times'} ${isAuthentic ? 'text-green-600' : 'text-red-600'} text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">${data.decision}</h3>
+                                    <p class="text-gray-600">${isAuthentic ? '✅ Access granted to secure system' : '❌ Access denied'}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="bg-white rounded p-4">
+                                    <h4 class="font-semibold text-gray-900 mb-3">Authentication Metrics</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <div class="flex justify-between items-center mb-1">
+                                                <span class="text-gray-600">Similarity Score</span>
+                                                <span class="text-lg font-bold ${similarity >= data.threshold_used ? 'text-green-600' : 'text-red-600'}">${similarity}%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                                <div class="${similarity >= data.threshold_used ? 'bg-green-600' : 'bg-red-600'} h-2 rounded-full" style="width: ${Math.min(similarity, 100)}%"></div>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1">Threshold: ${data.threshold_used}%</div>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <div class="text-gray-500">User ID</div>
+                                                <div class="font-bold">${data.user_id}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-500">Username</div>
+                                                <div class="font-bold">${data.username || 'Unknown'}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-500">Auth Attempts</div>
+                                                <div class="font-bold">${data.auth_attempts}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-500">Successful</div>
+                                                <div class="font-bold">${data.successful_auths}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white rounded p-4">
+                                    <h4 class="font-semibold text-gray-900 mb-3">Current EEG Analysis</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Subject ID:</span>
+                                            <span class="font-bold">${data.current_auth_result.subject_id}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Emotion:</span>
+                                            <span class="font-bold">${data.current_auth_result.emotion}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Subject Confidence:</span>
+                                            <span class="font-bold text-blue-600">${data.current_auth_result.subject_confidence}%</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Emotion Confidence:</span>
+                                            <span class="font-bold text-purple-600">${data.current_auth_result.emotion_confidence}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="${isAuthentic ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded p-3 text-sm">
+                                <div class="flex items-center">
+                                    <i class="fas ${isAuthentic ? 'fa-shield-alt' : 'fa-exclamation-triangle'} mr-2"></i>
+                                    <div>
+                                        ${isAuthentic 
+                                            ? '<strong>Secure Access:</strong> User identity verified successfully.'
+                                            : '<strong>Security Alert:</strong> EEG signature does not match stored profile.'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    showMessage('authResult', html, isAuthentic ? 'success' : 'error');
+                    
+                    // Clear file
+                    document.getElementById('authFile').value = '';
+                    document.getElementById('authFileText').textContent = 'Upload EEG File';
+                    document.getElementById('authFileArea').classList.remove('border-green-400', 'bg-green-50');
+                    
+                } else {
+                    showMessage('authResult', `<div class="error-box rounded-lg p-4"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${data.error}</div>`, 'error');
+                }
+            } catch (error) {
+                showMessage('authResult', `<div class="error-box rounded-lg p-4"><i class="fas fa-exclamation-triangle mr-2"></i>Connection error: ${error.message}<br>Make sure backend is running at ${API_BASE}</div>`, 'error');
+            }
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+
+        // Load users list
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                const data = await response.json();
+                
+                const usersList = document.getElementById('usersList');
+                
+                if (data.count === 0) {
+                    usersList.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-users text-3xl mb-3 text-gray-300"></i>
+                            <p>No users registered yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                data.users.forEach(user => {
+                    const successRate = user.success_rate || 0;
+                    
+                    html += `
+                        <div class="bg-white rounded-lg shadow border p-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-bold text-gray-900">${user.username}</h4>
+                                    <p class="text-gray-600 text-sm">${user.user_id}</p>
+                                </div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-semibold">
+                                    ${user.email || 'No email'}
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                                <div>
+                                    <div class="text-xs text-gray-500">Registered</div>
+                                    <div class="font-semibold text-sm">${new Date(user.registration_date).toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500">Attempts</div>
+                                    <div class="font-semibold text-sm">${user.auth_attempts}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500">Successful</div>
+                                    <div class="font-semibold text-sm">${user.successful_auths}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500">Success Rate</div>
+                                    <div class="font-semibold text-sm ${successRate >= 70 ? 'text-green-600' : 'text-red-600'}">${successRate}%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button onclick="deleteUser('${user.user_id}')" class="px-3 py-1 bg-red-100 text-red-600 rounded text-sm hover:bg-red-200 transition-colors">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                usersList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        // Delete user
+        async function deleteUser(userId) {
+            if (!confirm(`Are you sure you want to delete user ${userId}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/delete/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`User ${userId} deleted successfully`);
+                    loadUserCount();
+                    loadUsers();
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Helper function to show messages
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

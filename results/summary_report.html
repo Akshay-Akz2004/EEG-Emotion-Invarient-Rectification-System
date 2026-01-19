@@ -1,0 +1,105 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>EPRN Model Summary Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .header { text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; }
+                .section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
+                .metric { display: inline-block; margin: 10px; padding: 15px; background: #f8f9fa; border-radius: 5px; min-width: 200px; }
+                .metric-value { font-size: 24px; font-weight: bold; color: #667eea; }
+                .metric-label { font-size: 14px; color: #666; }
+                .image-container { text-align: center; margin: 20px 0; }
+                img { max-width: 100%; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f8f9fa; }
+                .good { color: #28a745; font-weight: bold; }
+                .warning { color: #ffc107; font-weight: bold; }
+                .bad { color: #dc3545; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>EPRN Model Summary Report</h1>
+                <p>EEG Biometric Authentication with Emotion-Invariant Features</p>
+                <p>Generated on: 2026-01-17 09:27:46</p>
+            </div>
+            
+            <div class="section">
+                <h2>Overall Performance</h2>
+                <div class="metric">
+                    <div class="metric-value">90.42%</div>
+                    <div class="metric-label">Test Accuracy</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">90.57%</div>
+                    <div class="metric-label">Best Validation Accuracy</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">31.39%</div>
+                    <div class="metric-label">Emotion Recognition Accuracy</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Emotion Invariance Analysis</h2>
+        
+                <div class="metric">
+                    <div class="metric-value">0.00%</div>
+                    <div class="metric-label">Mean Per-Emotion Accuracy</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value good">0.00%</div>
+                    <div class="metric-label">Emotion Variance</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">0.00%</div>
+                    <div class="metric-label">Max Emotion Difference</div>
+                </div>
+            
+            </div>
+            
+            <div class="section">
+                <h2>Training Statistics</h2>
+                <div class="image-container">
+                    <img src="training_history.png" alt="Training History">
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Per-Emotion Performance</h2>
+                <div class="image-container">
+                    <img src="per_emotion_performance.png" alt="Per-Emotion Performance">
+                </div>
+            </div>
+        
+            <div class="section">
+                <h2>Overfitting Analysis</h2>
+        
+                <div class="metric">
+                    <div class="metric-value good">-4.8%</div>
+                    <div class="metric-label">Final Train-Val Gap</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">40</div>
+                    <div class="metric-label">Training Epochs</div>
+                </div>
+                <p><strong>Interpretation:</strong> Excellent: Minimal overfitting detected.</p>
+            
+            </div>
+            
+            <div class="section">
+                <h2>Recommendations</h2>
+                <ul>
+        
+                    <li>✓ Model performance is excellent! (>85% accuracy)</li>
+                    <li>✓ Emotion invariance looks good</li>
+                    <li>✓ Ready for publication/presentation</li>
+            
+                </ul>
+            </div>
+        </body>
+        </html>
+        
