@@ -1,0 +1,3 @@
+# Emotion prototype rectification network
+Traditional EEG-based authentication systems suffer significant performance degradation when users experience different emotional states during enrollment versus verification. This repository implements the Emotion Prototype Rectification Network (EPRN), a novel deep learning architecture that achieves emotion-invariant subject authentication by explicitly modeling and removing emotion-specific neural patterns from EEG signals
+Acheived 90.91% authentication accuracy with only 1.08% standard deviation across four emotional states (happy, sad, fear, disgust) 
